@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050c3a">
+  <link rel="icon" href="images/ph_logo.jpg">
+  <link rel="apple-touch-icon" href="images/ph_logo.jpg">
+  <link rel="preload" href="fonts/cinzel-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/barlow-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <title>Register · Solemn Assembly 2026 Registrar Desk</title>
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body data-mode="registrar">
+  <div class="gate" id="deskGate" hidden>
+    <div class="gate__card" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+      <img class="gate__logo" src="images/logos.png" alt="">
+      <h1 id="gateTitle">Registrar desk</h1>
+      <p>Solemn Assembly 2026. Enter your name and the desk passcode you got from the admin.</p>
+      <form novalidate>
+        <div class="field">
+          <label for="deskName">Your name</label>
+          <input id="deskName" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="deskKey">Desk passcode</label>
+          <input id="deskKey" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="gate__error" role="alert"></p>
+        <button class="btn btn--primary btn--block" type="submit">Open desk</button>
+      </form>
+    </div>
+  </div>
+  <header class="appbar">
+    <a class="appbar__brand" href="index.html">
+      <img class="appbar__logo" src="images/logos.png" alt="">
+      <span>
+        <span class="appbar__title">Solemn Assembly 2026</span><br>
+        <span class="appbar__sub">Registrar desk</span>
+      </span>
+    </a>
+    <div class="desk-stats" id="deskStats" aria-live="polite"></div>
+    <nav class="tabs" aria-label="Pages">
+      <a href="index.html" aria-current="page">Register</a>
+      <a href="print.html">Print tags</a>
+    </nav>
+    <div class="desk">
+      <span>Desk: <span class="desk__who" id="deskWho"></span></span>
+      <button class="desk__change" id="deskChange" type="button">Change</button>
+    </div>
+  </header>
+  <main class="page register-layout">
+    <form id="registrationForm" novalidate>
+      <h1 class="sr-only">Register a participant</h1>
+      <fieldset class="section">
+        <legend>Personal details</legend>
+        <div class="grid grid--2">
+          <div class="field">
+            <label for="title">Title<span class="req" aria-hidden="true">*</span></label>
+            <input id="title" name="title" list="titleList" autocomplete="honorific-prefix" placeholder="Bro., Sis., Mr., Mrs., Dr. …" required>
+            <datalist id="titleList"></datalist>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <span class="label" id="genderLabel">Gender<span class="req" aria-hidden="true">*</span></span>
+            <div class="choice-group" role="radiogroup" aria-labelledby="genderLabel" data-required data-name="gender">
+              <label class="choice"><input type="radio" name="gender" value="Male"><span>Male</span></label>
+              <label class="choice"><input type="radio" name="gender" value="Female"><span>Female</span></label>
+            </div>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="surname">Surname<span class="req" aria-hidden="true">*</span></label>
+            <input id="surname" name="surname" autocomplete="family-name" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="firstname">First name<span class="req" aria-hidden="true">*</span></label>
+            <input id="firstname" name="firstname" autocomplete="given-name" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="othernames">Other names</label>
+            <input id="othernames" name="othernames" autocomplete="additional-name">
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <span class="label" id="maritalLabel">Marital status<span class="req" aria-hidden="true">*</span></span>
+            <div class="choice-group" role="radiogroup" aria-labelledby="maritalLabel" data-required data-name="marital">
+              <label class="choice"><input type="radio" name="marital" value="Single"><span>Single</span></label>
+              <label class="choice"><input type="radio" name="marital" value="Married"><span>Married</span></label>
+              <label class="choice"><input type="radio" name="marital" value="Widowed"><span>Widowed</span></label>
+            </div>
+            <p class="field__error"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>Contact</legend>
+        <div class="grid grid--2">
+          <div class="field">
+            <label for="phone">Phone / WhatsApp number<span class="req" aria-hidden="true">*</span></label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08031234567" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="Optional">
+            <p class="field__error"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>Residence</legend>
+        <div class="grid grid--3">
+          <div class="field">
+            <label for="state">State of residence<span class="req" aria-hidden="true">*</span></label>
+            <select id="state" name="state" required></select>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="lgaSelect" id="lgaLabel"><span id="lgaLabelText">LGA</span><span class="req" aria-hidden="true">*</span></label>
+            <select id="lgaSelect" name="lga" required></select>
+            <input id="lgaText" name="" autocomplete="off" placeholder="e.g. Ikeja, Lagos State" hidden>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="city">City / town<span class="req" aria-hidden="true">*</span></label>
+            <input id="city" name="city" autocomplete="address-level2" placeholder="e.g. Rumuokoro" required>
+            <p class="field__error"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>Church &amp; fellowship</legend>
+        <div class="grid grid--2">
+          <div class="field span-2">
+            <label for="church">Church / ministry<span class="req" aria-hidden="true">*</span></label>
+            <input id="church" name="church" autocomplete="organization" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field span-2">
+            <span class="label" id="discLabel">Are you in a discipleship relationship?<span class="req" aria-hidden="true">*</span></span>
+            <div class="choice-group" role="radiogroup" aria-labelledby="discLabel" data-required data-name="discipleship">
+              <label class="choice"><input type="radio" name="discipleship" value="Yes" aria-controls="centerField"><span>Yes</span></label>
+              <label class="choice"><input type="radio" name="discipleship" value="No" aria-controls="centerField"><span>No</span></label>
+            </div>
+            <p class="field__error"></p>
+          </div>
+          <div class="field span-2 followup" id="centerField" hidden>
+            <label for="center">What is the name of the discipleship center you belong to?<span class="req" aria-hidden="true">*</span></label>
+            <input id="center" name="center" autocomplete="off" placeholder="e.g. Peace House, D-Line">
+            <p class="field__error"></p>
+          </div>
+          <div class="field span-2">
+            <label for="how">How did you hear about the program?<span class="req" aria-hidden="true">*</span></label>
+            <select id="how" name="how" required></select>
+            <p class="field__error"></p>
+          </div>
+        </div>
+      </fieldset>
+      <div class="form-actions">
+        <button type="reset" class="btn btn--ghost">Clear form</button>
+        <button type="submit" id="submitBtn" class="btn btn--primary">Register</button>
+      </div>
+    </form>
+
+    <aside class="aside">
+      <section class="section" aria-live="polite">
+        <h2 class="section__title">Last registration</h2>
+        <div id="result" class="pass-host"><p class="hint">The program code shows here after you register someone.</p></div>
+      </section>
+      <section class="section">
+        <h2 class="section__title">Registered at this desk</h2>
+        <ul class="recent" id="recentList"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="register.js"></script>
+</body>
+</html>

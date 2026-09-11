@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050c3a">
+  <link rel="icon" href="images/ph_logo.jpg">
+  <link rel="apple-touch-icon" href="images/ph_logo.jpg">
+  <link rel="preload" href="fonts/cinzel-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/barlow-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <title>Print tags · Solemn Assembly 2026 Registrar Desk</title>
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body data-mode="registrar">
+  <div class="gate" id="deskGate" hidden>
+    <div class="gate__card" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+      <img class="gate__logo" src="images/logos.png" alt="">
+      <h1 id="gateTitle">Registrar desk</h1>
+      <p>Solemn Assembly 2026. Enter your name and the desk passcode you got from the admin.</p>
+      <form novalidate>
+        <div class="field">
+          <label for="deskName">Your name</label>
+          <input id="deskName" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="deskKey">Desk passcode</label>
+          <input id="deskKey" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="gate__error" role="alert"></p>
+        <button class="btn btn--primary btn--block" type="submit">Open desk</button>
+      </form>
+    </div>
+  </div>
+  <header class="appbar">
+    <a class="appbar__brand" href="index.html">
+      <img class="appbar__logo" src="images/logos.png" alt="">
+      <span>
+        <span class="appbar__title">Solemn Assembly 2026</span><br>
+        <span class="appbar__sub">Registrar desk</span>
+      </span>
+    </a>
+    <div class="desk-stats" id="deskStats" aria-live="polite"></div>
+    <nav class="tabs" aria-label="Pages">
+      <a href="index.html">Register</a>
+      <a href="print.html" aria-current="page">Print tags</a>
+    </nav>
+    <div class="desk">
+      <span>Desk: <span class="desk__who" id="deskWho"></span></span>
+      <button class="desk__change" id="deskChange" type="button">Change</button>
+    </div>
+  </header>
+  <main class="page print-layout">
+    <h1 class="sr-only">Print name tags</h1>
+    <div class="controls">
+      <section class="section">
+        <h2 class="section__title">Find a participant</h2>
+        <form id="searchForm" class="row" role="search" novalidate>
+          <div class="field">
+            <label for="q" class="sr-only">Code, name or phone number</label>
+            <input id="q" placeholder="Code, name or phone number" autocomplete="off" enterkeyhint="search">
+          </div>
+          <button class="btn btn--primary" type="submit">Search</button>
+        </form>
+        <div id="searchOut"></div>
+      </section>
+
+      <section class="section">
+        <h2 class="section__title">Add by program code</h2>
+        <form id="codeForm" class="grid" novalidate>
+          <div class="field">
+            <label for="code">Program code</label>
+            <input id="code" placeholder="SA26-0012, or just 12" autocomplete="off" autocapitalize="characters" enterkeyhint="done">
+          </div>
+          <div class="grid grid--2">
+            <div class="field">
+              <label for="slotPos">Space on sheet</label>
+              <select id="slotPos">
+                <option value="">Next free</option>
+                <option>1</option><option>2</option><option>3</option>
+                <option>4</option><option>5</option><option>6</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tagType">Tag type</label>
+              <select id="tagType">
+                <option value="participant">Participant</option>
+                <option value="resource">Resource Person</option>
+                <option value="ministering">Ministering Team</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn--primary" type="submit">Add to sheet</button>
+        </form>
+      </section>
+
+      <section class="section">
+        <h2 class="section__title">Quick fill</h2>
+        <div class="quick">
+          <button class="btn btn--ghost" type="button" id="lastBtn">My last registration</button>
+          <button class="btn btn--ghost" type="button" id="autoBtn">Next unprinted</button>
+        </div>
+        <p class="hint" style="margin-top:.6rem">Next unprinted fills the empty spaces with people who have no tag yet, oldest registration first. Other desks won’t get the same people for 10 minutes.</p>
+      </section>
+    </div>
+
+    <div class="sheet-area">
+      <div class="sheet-bar">
+        <span class="sheet-bar__count" id="sheetCount">0 of 6 tags</span>
+        <button class="btn btn--danger" type="button" id="clearBtn">Clear sheet</button>
+        <button class="btn btn--gold" type="button" id="printBtn" disabled>Print tags</button>
+      </div>
+      <div class="sheet-scroller" id="sheetScroller">
+        <div class="sheet-fit" id="sheetFit">
+          <div class="sheet" id="sheet" aria-label="A4 sheet preview, 6 tag spaces"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <dialog class="pass-dialog" id="confirmDialog">
+    <div class="pass-dialog__body">
+      <h2 id="confirmTitle">Did the tags print correctly?</h2>
+      <p id="confirmText">Marking them as printed records who printed them and clears the sheet.</p>
+      <div class="pass-dialog__actions">
+        <button class="btn btn--ghost" type="button" id="confirmNo">Not yet, keep sheet</button>
+        <button class="btn btn--primary" type="button" id="confirmYes">Yes, mark as printed</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="print.js"></script>
+</body>
+</html>
