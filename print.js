@@ -21,6 +21,9 @@
   const save = () => localStorage.setItem(SHEET_KEY, JSON.stringify(slots));
   const filled = () => slots.filter(Boolean);
   const fullName = (d) => [d.title, d.surname, d.firstname, d.othernames].filter(Boolean).join(" ");
+  // Nobody gets a tag until the camping question is answered
+  const needsCamping = (d) => d.camping !== "Yes" && d.camping !== "No";
+  const fixLink = (d) => `edit.html?code=${encodeURIComponent(d.serial)}`;
 
   /* ---------- Tag markup ---------- */
   function tagHTML(d, kind) {
@@ -46,22 +49,40 @@
         </dl>
         <footer class="tag__foot">
           <span class="tag__role">${esc(SA.TAG_TYPES[k])}<small>${src}</small></span>
+          ${d.camping === "Yes" ? `<span class="tag__camp">Camping</span>` : ""}
           <span class="tag__code">${esc(d.serial)}</span>
         </footer>
       </article>`;
   }
 
   function render() {
-    sheet.innerHTML = slots.map((s, i) => s
-      ? `<div class="slot slot--filled">${tagHTML(s.data, s.kind)}
+    sheet.innerHTML = slots.map((s, i) => {
+      if (!s) return `<div class="slot"><div class="slot__empty">Space ${i + 1}</div></div>`;
+      const stuck = needsCamping(s.data);
+      return `<div class="slot slot--filled${stuck ? " slot--blocked" : ""}">${tagHTML(s.data, s.kind)}
+           ${stuck ? `<div class="slot__block">
+              <p><b>Camping not answered</b></p>
+              <p>${esc(fullName(s.data))} cannot get a tag yet.</p>
+              <a class="btn btn--gold btn--sm" href="${fixLink(s.data)}">Set their answer</a>
+            </div>` : ""}
            <button type="button" class="slot__remove" data-remove="${i}" aria-label="Remove tag in space ${i + 1}">×</button>
-         </div>`
-      : `<div class="slot"><div class="slot__empty">Space ${i + 1}</div></div>`
-    ).join("");
+         </div>`;
+    }).join("");
+
     const n = filled().length;
+    const stuck = filled().filter(s => needsCamping(s.data));
     $("sheetCount").textContent = `${n} of ${SIZE} tags`;
-    printBtn.disabled = n === 0;
-    printBtn.textContent = n ? `Print ${n} tag${n > 1 ? "s" : ""}` : "Print tags";
+    printBtn.disabled = n === 0 || stuck.length > 0;
+    printBtn.textContent = stuck.length
+      ? `${stuck.length} tag${stuck.length > 1 ? "s" : ""} blocked`
+      : (n ? `Print ${n} tag${n > 1 ? "s" : ""}` : "Print tags");
+    const warn = $("sheetWarn");
+    warn.hidden = !stuck.length;
+    if (stuck.length) {
+      warn.innerHTML = `<b>${stuck.length}</b> ${stuck.length === 1 ? "person on this sheet has" : "people on this sheet have"}
+        not answered the camping question: ${stuck.map(s => esc(s.data.serial)).join(", ")}.
+        Set the answer on the <a href="edit.html">Edit page</a>, or remove them with the × button, then print.`;
+    }
     $("clearBtn").disabled = n === 0;
     save();
     fitNames();
@@ -101,6 +122,13 @@
   function place(data, kind = "participant", pos = null, { silent = false } = {}) {
     if (slots.some(s => s && s.data.serial === data.serial)) {
       if (!silent) SA.toast(`${data.serial} is already on this sheet.`, "info");
+      return false;
+    }
+    if (needsCamping(data)) {
+      if (!silent) {
+        SA.toast(`${fullName(data)} has not answered the camping question, so no tag can be printed yet.`, "error", 7000);
+        showFix(data);
+      }
       return false;
     }
     if (data.printedAt && !silent) {
@@ -148,6 +176,14 @@
     render();
   });
 
+  function showFix(d) {
+    const box = $("blockBox");
+    box.innerHTML = `<b>${esc(fullName(d))}</b> (${esc(d.serial)}) has not said whether they are camping.
+      Ask them, set it, and their tag can be printed straight after.
+      <a class="btn btn--gold btn--sm" href="${fixLink(d)}">Set camping answer</a>`;
+    box.hidden = false;
+  }
+
   /* ---------- Find a participant ---------- */
   $("searchForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -169,13 +205,17 @@
         <li class="hit">
           <span class="hit__name"><span class="hit__code">${esc(d.serial)}</span>${esc(fullName(d))}</span>
           <span class="hit__meta">
-            ${d.printedAt
-              ? `<span class="badge badge--printed">Printed ${esc(d.printedAt.slice(5, 16))}</span>`
-              : `<span class="badge">No tag yet</span>`}
+            ${needsCamping(d)
+              ? `<span class="badge badge--block">Camping not answered</span>`
+              : d.printedAt
+                ? `<span class="badge badge--printed">Printed ${esc(d.printedAt.slice(5, 16))}</span>`
+                : `<span class="badge">No tag yet</span>`}
             ${d.source === "Online" ? `<span class="badge badge--online">Online</span>` : ""}
             ${esc(d.church || "")}
           </span>
-          <button type="button" class="btn btn--primary btn--sm" data-add="${esc(d.serial)}">${d.printedAt ? "Reprint" : "Add"}</button>
+          ${needsCamping(d)
+            ? `<a class="btn btn--gold btn--sm" href="${fixLink(d)}">Set camping</a>`
+            : `<button type="button" class="btn btn--primary btn--sm" data-add="${esc(d.serial)}">${d.printedAt ? "Reprint" : "Add"}</button>`}
         </li>`).join("")}</ul>` +
         (res.total > res.data.length ? `<p class="results__note">Showing ${res.data.length} of ${res.total}. Type more of the name to narrow it down.</p>` : "");
     } catch (err) {
@@ -258,6 +298,22 @@
     }
   });
 
+  /* ---------- Keep the stored sheet in step with the server ---------- */
+  async function syncSlots() {
+    const on = filled();
+    if (!on.length) return;
+    const fresh = await Promise.all(on.map(async (s) => {
+      try { return await fetchByCode(s.data.serial); } catch { return null; }
+    }));
+    let changed = false;
+    on.forEach((s, i) => {
+      const d = fresh[i];
+      if (!d) return;
+      if (JSON.stringify(d) !== JSON.stringify(s.data)) { s.data = d; changed = true; }
+    });
+    if (changed) render();
+  }
+
   /* ---------- Print, then confirm ---------- */
   const dialog = $("confirmDialog");
 
@@ -267,6 +323,15 @@
   }
 
   printBtn.addEventListener("click", async () => {
+    if (!filled().length) return;
+    // another desk may have answered the camping question or printed since this sheet was built
+    SA.busy(printBtn, true, "Checking…");
+    try { await syncSlots(); } finally { SA.busy(printBtn, false); }
+    const stuck = filled().filter(s => needsCamping(s.data));
+    if (stuck.length) {
+      SA.toast(`${stuck.length} tag${stuck.length === 1 ? "" : "s"} cannot be printed until the camping question is answered.`, "error", 7000);
+      return;
+    }
     const n = filled().length;
     if (!n) return;
     await Promise.all([document.fonts ? document.fonts.ready : null, imagesReady()]);
@@ -291,10 +356,15 @@
     try {
       const res = await SA.api("printConfirm", { serials });
       if (res.status !== "success") throw new Error(res.message || "Could not mark tags as printed.");
-      slots = Array(SIZE).fill(null);
+      const blocked = res.blocked || [];
+      slots = slots.map(s => (s && blocked.some(b => b.serial === s.data.serial)) ? s : null);
       render();
       dialog.close();
-      SA.toast(`${res.updated} tag${res.updated === 1 ? "" : "s"} marked as printed.`, "success");
+      if (blocked.length) {
+        SA.toast(`${blocked.length} tag${blocked.length === 1 ? " was" : "s were"} not counted: ` +
+          `${blocked.map(b => b.fullname).join(", ")} still ${blocked.length === 1 ? "has" : "have"} no camping answer.`, "error", 9000);
+      }
+      if (res.updated) SA.toast(`${res.updated} tag${res.updated === 1 ? "" : "s"} marked as printed.`, "success");
       SA.refreshStats();
       $("code").focus();
     } catch (err) {
@@ -310,6 +380,7 @@
 
   SA.initDesk({
     onReady: async () => {
+      syncSlots();
       // print.html?add=SA26-0001,SA26-0002 (the "Print this tag" link on the Register page)
       const params = new URLSearchParams(location.search);
       const add = params.get("add");

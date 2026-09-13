@@ -7,125 +7,10 @@
   if (!form) return;
 
   const $ = (id) => document.getElementById(id);
-  const stateSel = $("state");
-  const lgaSelect = $("lgaSelect");
-  const lgaText = $("lgaText");
-  const centerField = $("centerField");
   const submitBtn = $("submitBtn");
-
-  /* ---------- Populate choices ---------- */
-  $("titleList").innerHTML = SA.TITLES.map(t => `<option value="${SA.escape(t)}">`).join("");
-  SA.fillSelect(stateSel, SA.STATES, "Select state");
-  SA.fillSelect(lgaSelect, SA.RIVERS_LGAS, "Select LGA");
-  SA.fillSelect($("how"), SA.HOW, "Select one");
-
-  /* ---------- Dependent fields ---------- */
-  function syncLga() {
-    const rivers = stateSel.value === "Rivers";
-    lgaSelect.hidden = !rivers;
-    lgaText.hidden = rivers;
-    lgaSelect.name = rivers ? "lga" : "";
-    lgaText.name = rivers ? "" : "lga";
-    lgaSelect.required = rivers;
-    lgaText.required = !rivers;
-    $("lgaLabel").htmlFor = rivers ? "lgaSelect" : "lgaText";
-    // Outside Rivers there is no LGA list, so ask for the state in the same box
-    $("lgaLabelText").textContent = stateSel.value && !rivers ? "LGA and state" : "LGA";
-  }
-  function syncCenter(e) {
-    const picked = form.querySelector('input[name="discipleship"]:checked');
-    const yes = !!picked && picked.value === "Yes";
-    const wasHidden = centerField.hidden;
-    centerField.hidden = !yes;
-    $("center").required = yes;
-    if (!yes) { $("center").value = ""; clearError($("center")); }
-    // When someone just picked Yes, take them straight to the follow-up question
-    if (yes && wasHidden && e) $("center").focus({ preventScroll: false });
-  }
-  stateSel.addEventListener("change", () => { syncLga(); clearError(stateSel); clearError(lgaText); });
-  form.querySelectorAll('input[name="discipleship"]').forEach(r => r.addEventListener("change", syncCenter));
-
-  function setDefaults() {
-    if (mode === "registrar") stateSel.value = "Rivers"; // the event is in Port Harcourt
-    syncLga();
-    syncCenter();
-  }
-  setDefaults();
-
-  /* ---------- Validation ---------- */
-  function stateMsg() { return stateSel.value === "Rivers" ? "Choose the LGA." : "Enter the LGA and state."; }
-  const messages = {
-    title: "Choose or type a title.",
-    surname: "Enter the surname.",
-    firstname: "Enter the first name.",
-    gender: "Choose male or female.",
-    phone: "Enter the phone number.",
-    state: "Choose Rivers State or Outside Rivers State.",
-    lga: stateMsg,
-    city: "Enter the city or town.",
-    marital: "Choose a marital status.",
-    church: "Enter the church or ministry.",
-    discipleship: "Choose yes or no.",
-    center: "Enter the name of your discipleship center.",
-    how: "Tell us how you heard about the program."
-  };
-
-  function fieldOf(el) { return el.closest(".field"); }
-  function showError(el, msg) {
-    const f = fieldOf(el); if (!f) return;
-    f.classList.add("field--invalid");
-    const p = f.querySelector(".field__error");
-    if (p) p.textContent = msg;
-    el.setAttribute("aria-invalid", "true");
-  }
-  function clearError(el) {
-    const f = fieldOf(el); if (!f) return;
-    f.classList.remove("field--invalid");
-    const p = f.querySelector(".field__error");
-    if (p) p.textContent = "";
-    f.querySelectorAll("[aria-invalid]").forEach(x => x.removeAttribute("aria-invalid"));
-  }
-  form.addEventListener("input", (e) => clearError(e.target));
-  form.addEventListener("change", (e) => clearError(e.target));
-
-  function validate() {
-    let first = null;
-    const controls = [...form.querySelectorAll("input[name], select[name]")]
-      .filter(el => !el.hidden && !el.closest("[hidden]") && el.type !== "radio");
-
-    controls.forEach(el => {
-      clearError(el);
-      const v = el.value.trim();
-      if (el.required && !v) {
-        const m = messages[el.name];
-        showError(el, (typeof m === "function" ? m() : m) || "This field is required.");
-        first = first || el;
-      }
-    });
-
-    // radio groups
-    form.querySelectorAll(".choice-group[data-required]").forEach(g => {
-      const name = g.dataset.name;
-      if (!form.querySelector(`input[name="${name}"]:checked`)) {
-        const input = g.querySelector("input");
-        showError(input, messages[name]);
-        first = first || input;
-      }
-    });
-
-    const phone = $("phone");
-    const p = SA.normalizePhone(phone.value);
-    if (phone.value.trim() && !SA.validPhone(p)) {
-      showError(phone, "Use 11 digits like 08031234567, or +countrycode for numbers outside Nigeria.");
-      first = first || phone;
-    }
-    const email = $("email");
-    if (email.value.trim() && !email.checkValidity()) {
-      showError(email, "This email address doesn’t look right.");
-      first = first || email;
-    }
-    return first;
-  }
+  const core = SA.FormCore(form);
+  const defaults = mode === "registrar" ? { state: "Rivers" } : null;  // the event is in Port Harcourt
+  core.reset(defaults);
 
   /* ---------- Submit ---------- */
   let sending = false;
@@ -133,7 +18,7 @@
     e.preventDefault();
     if (sending) return;
 
-    const bad = validate();
+    const bad = core.validate();
     if (bad) {
       bad.focus({ preventScroll: true });
       bad.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -141,11 +26,7 @@
       return;
     }
 
-    const data = {};
-    new FormData(form).forEach((v, k) => { if (k) data[k] = String(v).trim(); });
-    ["surname", "firstname", "othernames", "city", "lga"].forEach(k => { if (data[k]) data[k] = SA.tidyName(data[k]); });
-    data.phone = SA.normalizePhone(data.phone);
-    data.email = (data.email || "").toLowerCase();
+    const data = core.collect();
     if (mode === "public") { data.key = ""; data.registrar = ""; }
 
     sending = true;
@@ -165,11 +46,7 @@
     }
   });
 
-  form.addEventListener("reset", () => {
-    form.querySelectorAll(".field--invalid").forEach(f => f.classList.remove("field--invalid"));
-    form.querySelectorAll(".field__error").forEach(p => (p.textContent = ""));
-    setTimeout(setDefaults, 0);
-  });
+  form.addEventListener("reset", (e) => { e.preventDefault(); core.reset(defaults); });
 
   function onDone(res) {
     const dup = res.status === "duplicate";
@@ -202,7 +79,8 @@
       <div class="result__actions">
         <a class="btn btn--primary" href="print.html?add=${encodeURIComponent(res.serial)}">Print this tag</a>
         <button type="button" class="btn btn--ghost" data-copy="${SA.escape(res.serial)}">Copy code</button>
-      </div>`;
+      </div>
+      ${dup ? `<p class="hint" style="margin-top:.6rem"><a href="edit.html?code=${encodeURIComponent(res.serial)}">Open their details to check or correct</a></p>` : ""}`;
     box.hidden = false;
 
     const list = recent().filter(r => r.serial !== res.serial);
@@ -211,14 +89,14 @@
     renderRecent();
 
     if (!dup) {
-      form.reset();
+      core.reset(defaults);
       SA.toast(`${res.serial} saved for ${res.fullname}.`, "success");
       SA.refreshStats();
     } else {
       SA.toast("This person was registered before. Their existing code is shown.", "info", 6000);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => $("title").focus({ preventScroll: true }), 350);
+    setTimeout(() => core.focus(), 350);
   }
 
   function renderRecent() {
@@ -249,13 +127,13 @@
     $("passTicket").innerHTML = ticketHTML(res, dup);
     $("passHeading").textContent = dup ? "You are already registered" : "You are registered";
     $("passCopy").dataset.copy = res.serial;
-    if (!dup) form.reset();
+    if (!dup) core.reset(defaults);
     if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
   }
   const again = $("passAgain");
   if (again) again.addEventListener("click", () => {
     $("passDialog").close();
-    form.reset();
+    core.reset(defaults);
     window.scrollTo({ top: form.offsetTop - 16, behavior: "smooth" });
   });
   if (mode === "registrar") SA.initDesk();

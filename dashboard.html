@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050c3a">
+  <link rel="icon" href="images/ph_logo.jpg">
+  <link rel="apple-touch-icon" href="images/ph_logo.jpg">
+  <link rel="preload" href="fonts/cinzel-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/barlow-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <title>Dashboard · Solemn Assembly 2026 Registrar Desk</title>
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body data-mode="registrar">
+  <div class="gate" id="deskGate" hidden>
+    <div class="gate__card" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+      <img class="gate__logo" src="images/logos.png" alt="">
+      <h1 id="gateTitle">Registrar desk</h1>
+      <p>Solemn Assembly 2026. Enter your name and the desk passcode you got from the admin.</p>
+      <form novalidate>
+        <div class="field">
+          <label for="deskName">Your name</label>
+          <input id="deskName" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="deskKey">Desk passcode</label>
+          <input id="deskKey" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="gate__error" role="alert"></p>
+        <button class="btn btn--primary btn--block" type="submit">Open desk</button>
+      </form>
+    </div>
+  </div>
+  <header class="appbar">
+    <a class="appbar__brand" href="index.html">
+      <img class="appbar__logo" src="images/logos.png" alt="">
+      <span>
+        <span class="appbar__title">Solemn Assembly 2026</span><br>
+        <span class="appbar__sub">Registrar desk</span>
+      </span>
+    </a>
+    <div class="desk-stats" id="deskStats" aria-live="polite"></div>
+    <nav class="tabs" aria-label="Pages">
+      <a href="index.html">Register</a>
+      <a href="print.html">Print tags</a>
+      <a href="edit.html">Edit</a>
+      <a href="dashboard.html" aria-current="page">Dashboard</a>
+    </nav>
+    <div class="desk">
+      <span>Desk: <span class="desk__who" id="deskWho"></span></span>
+      <button class="desk__change" id="deskChange" type="button">Change</button>
+    </div>
+  </header>
+  <main class="page">
+    <div class="board-head">
+      <div>
+        <h1>Registration dashboard</h1>
+        <p class="hint" id="stamp">Loading…</p>
+      </div>
+      <div class="board-head__actions">
+        <button class="btn btn--ghost btn--sm" type="button" id="csvBtn">Download summary (CSV)</button>
+        <button class="btn btn--ghost btn--sm" type="button" id="printBtn">Print</button>
+        <button class="btn btn--primary" type="button" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <div id="board" hidden>
+      <div class="metrics" id="metrics"></div>
+
+      <div class="notice notice--warn" id="campNudge" hidden>
+        <span id="campNudgeText"></span>
+        <a href="edit.html">Set their answers</a>
+      </div>
+
+      <section class="section">
+        <h2 class="section__title">Tag printing progress</h2>
+        <div class="progress"><span class="progress__fill" id="progressBar"></span></div>
+        <p class="hint" id="progressText"></p>
+      </section>
+
+      <div class="board-grid">
+        <section class="section"><h2 class="section__title">Camping</h2><div id="campingBox"></div></section>
+        <section class="section"><h2 class="section__title">Registrations per day</h2><div id="dayBox"></div></section>
+        <section class="section"><h2 class="section__title">Rivers State or outside</h2><div id="stateBox"></div></section>
+        <section class="section">
+          <h2 class="section__title" id="lgaHead">Where people live</h2>
+          <div class="listctl" id="lgaControl" hidden>
+            <label class="listctl__label" for="lgaSlider">Show <b id="lgaValue">Top</b></label>
+            <input type="range" id="lgaSlider" min="1" max="10" value="10" step="1"
+              aria-describedby="lgaRest">
+            <button type="button" class="btn btn--ghost btn--sm" id="lgaAll">Show all</button>
+            <p class="listctl__rest hint" id="lgaRest"></p>
+          </div>
+          <div id="lgaBox"></div>
+        </section>
+        <section class="section"><h2 class="section__title">Gender</h2><div id="genderBox"></div></section>
+        <section class="section"><h2 class="section__title">Marital status</h2><div id="maritalBox"></div></section>
+        <section class="section"><h2 class="section__title">In a discipleship relationship</h2><div id="discBox"></div></section>
+        <section class="section"><h2 class="section__title">How they heard</h2><div id="howBox"></div></section>
+        <section class="section">
+          <h2 class="section__title" id="churchHead">Churches</h2>
+          <div class="listctl" id="churchControl" hidden>
+            <label class="listctl__label" for="churchSlider">Show <b id="churchValue">Top</b></label>
+            <input type="range" id="churchSlider" min="1" max="10" value="10" step="1"
+              aria-describedby="churchRest">
+            <button type="button" class="btn btn--ghost btn--sm" id="churchAll">Show all</button>
+            <p class="listctl__rest hint" id="churchRest"></p>
+          </div>
+          <div id="churchBox"></div>
+        </section>
+        <section class="section">
+          <h2 class="section__title" id="registrarHead">Registered by</h2>
+          <div class="listctl" id="registrarControl" hidden>
+            <label class="listctl__label" for="registrarSlider">Show <b id="registrarValue">Top</b></label>
+            <input type="range" id="registrarSlider" min="1" max="10" value="10" step="1"
+              aria-describedby="registrarRest">
+            <button type="button" class="btn btn--ghost btn--sm" id="registrarAll">Show all</button>
+            <p class="listctl__rest hint" id="registrarRest"></p>
+          </div>
+          <div id="registrarBox"></div>
+        </section>
+      </div>
+
+      <section class="section">
+        <h2 class="section__title">Latest registrations</h2>
+        <div id="recentBox"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

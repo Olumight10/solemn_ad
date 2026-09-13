@@ -44,6 +44,8 @@
     <nav class="tabs" aria-label="Pages">
       <a href="index.html">Register</a>
       <a href="print.html" aria-current="page">Print tags</a>
+      <a href="edit.html">Edit</a>
+      <a href="dashboard.html">Dashboard</a>
     </nav>
     <div class="desk">
       <span>Desk: <span class="desk__who" id="deskWho"></span></span>
@@ -62,6 +64,7 @@
           </div>
           <button class="btn btn--primary" type="submit">Search</button>
         </form>
+        <div class="notice notice--warn" id="blockBox" hidden></div>
         <div id="searchOut"></div>
       </section>
 
@@ -110,6 +113,7 @@
         <button class="btn btn--danger" type="button" id="clearBtn">Clear sheet</button>
         <button class="btn btn--gold" type="button" id="printBtn" disabled>Print tags</button>
       </div>
+      <div class="notice notice--block" id="sheetWarn" hidden></div>
       <div class="sheet-scroller" id="sheetScroller">
         <div class="sheet-fit" id="sheetFit">
           <div class="sheet" id="sheet" aria-label="A4 sheet preview, 6 tag spaces"></div>

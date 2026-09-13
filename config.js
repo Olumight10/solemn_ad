@@ -40,6 +40,8 @@ window.SA = {
     "Degema", "Eleme", "Emohua", "Etche", "Gokana", "Ikwerre", "Khana", "Obio/Akpor",
     "Ogba/Egbema/Ndoni", "Ogu/Bolo", "Okrika", "Omuma", "Opobo/Nkoro", "Oyigbo", "Port Harcourt", "Tai"],
 
+  CAMPING: ["Yes", "No", "Not sure"],
+
   HOW: ["Church announcement", "Discipleship class", "Friend / neighbour invite", "Flyer / handbill",
     "Social media", "WhatsApp", "Radio", "SMS", "Other"],
 

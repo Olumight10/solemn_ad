@@ -9,7 +9,7 @@
   <link rel="preload" href="fonts/cinzel-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/barlow-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
-  <title>Register · Solemn Assembly 2026 Registrar Desk</title>
+  <title>Edit a registration · Solemn Assembly 2026 Registrar Desk</title>
   <meta name="robots" content="noindex, nofollow">
 </head>
 <body data-mode="registrar">
@@ -42,9 +42,9 @@
     </a>
     <div class="desk-stats" id="deskStats" aria-live="polite"></div>
     <nav class="tabs" aria-label="Pages">
-      <a href="index.html" aria-current="page">Register</a>
+      <a href="index.html">Register</a>
       <a href="print.html">Print tags</a>
-      <a href="edit.html">Edit</a>
+      <a href="edit.html" aria-current="page">Edit</a>
       <a href="dashboard.html">Dashboard</a>
     </nav>
     <div class="desk">
@@ -52,9 +52,39 @@
       <button class="desk__change" id="deskChange" type="button">Change</button>
     </div>
   </header>
-  <main class="page register-layout">
-    <form id="registrationForm" novalidate>
-      <h1 class="sr-only">Register a participant</h1>
+  <main class="page">
+    <h1 class="sr-only">Edit a registration</h1>
+
+    <section class="section">
+      <h2 class="section__title">Find the person</h2>
+      <form id="searchForm" class="row" role="search" novalidate>
+        <div class="field">
+          <label for="q" class="sr-only">Code, name or phone number</label>
+          <input id="q" placeholder="Code, name or phone number" autocomplete="off" enterkeyhint="search">
+        </div>
+        <button class="btn btn--primary" type="submit">Search</button>
+      </form>
+      <p style="margin:.7rem 0 0">
+        <button class="btn btn--ghost btn--sm btn--wrap" type="button" id="unsureBtn">Show people who haven’t answered the camping question</button>
+      </p>
+      <div id="searchOut"></div>
+    </section>
+
+    <p class="hint" id="empty">Search above, then open someone to correct their details. Changes are saved straight to the sheet, and the desk name is recorded.</p>
+
+    <section class="section" id="editor" hidden>
+      <div class="who">
+        <p class="who__code" id="whoCode"></p>
+        <p class="who__name" id="whoName"></p>
+        <p class="who__meta" id="whoMeta"></p>
+      </div>
+
+      <div class="notice notice--warn" id="campWarn" hidden>
+        This person registered before the camping question existed, so their answer is saved as “Not sure”.
+        Ask them and set it below.
+      </div>
+
+      <form id="editForm" novalidate>
       <fieldset class="section">
         <legend>Personal details</legend>
         <div class="grid grid--2">
@@ -174,27 +204,21 @@
           </div>
         </div>
       </fieldset>
-      <div class="form-actions">
-        <button type="reset" class="btn btn--ghost">Clear form</button>
-        <button type="submit" id="submitBtn" class="btn btn--primary">Register</button>
-      </div>
-    </form>
-
-    <aside class="aside">
-      <section class="section" aria-live="polite">
-        <h2 class="section__title">Last registration</h2>
-        <div id="result" class="pass-host"><p class="hint">The program code shows here after you register someone.</p></div>
-      </section>
-      <section class="section">
-        <h2 class="section__title">Registered at this desk</h2>
-        <ul class="recent" id="recentList"></ul>
-      </section>
-    </aside>
+        <div class="form-actions">
+          <span style="display:flex; gap:.5rem; flex-wrap:wrap">
+            <button type="button" class="btn btn--ghost" id="cancelBtn">Undo changes</button>
+            <button type="button" class="btn btn--ghost" id="closeBtn">Close</button>
+            <a class="btn btn--ghost" id="printLink" href="print.html">Print their tag</a>
+          </span>
+          <button type="submit" class="btn btn--primary" id="saveBtn">Save changes</button>
+        </div>
+      </form>
+    </section>
   </main>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
   <script src="form-core.js"></script>
-  <script src="register.js"></script>
+  <script src="edit.js"></script>
 </body>
 </html>
